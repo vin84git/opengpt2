@@ -27,7 +27,7 @@ def gelu(x):
 
 def norm(x, scope, *, axis=-1, epsilon=1e-5):
     """Normalize to mean = 0, std = 1, then do a diagonal affine transform."""
-    with tf.variable_scope(scope):
+    with tf.compat.v1.variable_scope(scope):
         n_state = x.shape[-1].value
         g = tf.compat.v1.get_variable('g', [n_state], initializer=tf.constant_initializer(1))
         b = tf.compat.v1.get_variable('b', [n_state], initializer=tf.constant_initializer(0))
@@ -48,10 +48,10 @@ def merge_states(x):
     return tf.reshape(x, start + [a*b])
 
 def conv1d(x, scope, nf, *, w_init_stdev=0.02):
-    with tf.variable_scope(scope):
+    with tf.compat.v1.variable_scope(scope):
         *start, nx = shape_list(x)
-        w = tf.get_variable('w', [1, nx, nf], initializer=tf.random_normal_initializer(stddev=w_init_stdev))
-        b = tf.get_variable('b', [nf], initializer=tf.constant_initializer(0))
+        w = tf.compat.v1.get_variable('w', [1, nx, nf], initializer=tf.random_normal_initializer(stddev=w_init_stdev))
+        b = tf.compat.v1.get_variable('b', [nf], initializer=tf.constant_initializer(0))
         c = tf.reshape(tf.matmul(tf.reshape(x, [-1, nx]), tf.reshape(w, [-1, nf]))+b, start+[nf])
         return c
 
@@ -98,7 +98,7 @@ def attn(x, scope, n_state, *, past, hparams):
         a = tf.matmul(w, v)
         return a
 
-    with tf.variable_scope(scope):
+    with tf.compat.v1.variable_scope(scope):
         c = conv1d(x, 'c_attn', n_state*3)
         q, k, v = map(split_heads, tf.split(c, 3, axis=2))
         present = tf.stack([k, v], axis=1)
@@ -113,7 +113,7 @@ def attn(x, scope, n_state, *, past, hparams):
 
 
 def mlp(x, scope, n_state, *, hparams):
-    with tf.variable_scope(scope):
+    with tf.compat.v1.variable_scope(scope):
         nx = x.shape[-1].value
         h = gelu(conv1d(x, 'c_fc', n_state))
         h2 = conv1d(h, 'c_proj', nx)
