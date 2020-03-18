@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-@author: Emmanuel Raj
-"""
 
 import pickle
 from flask import Flask, request
@@ -14,6 +11,7 @@ from flasgger import Swagger
 from time import time
 
 import model, sample, encoder
+from flask import jsonify
 
 
 app = Flask(__name__)
@@ -68,9 +66,9 @@ def inference_gpt2(
         raise ValueError("Can't get samples longer than window size: %s" % hparams.n_ctx)
 
     with tf.Session(graph=tf.Graph()) as sess:
-        context = tf.placeholder(tf.int32, [batch_size, None])
+        context = tf.compat.v1.placeholder(tf.int32, [batch_size, None])
         np.random.seed(seed)
-        tf.set_random_seed(seed)
+        tf.compat.v1.set_random_seed(seed)
         output = sample.sample_sequence(
             hparams=hparams, length=length,
             context=context,
@@ -100,8 +98,9 @@ def inference_gpt2(
         output = text
         elapsed = time() - start
         print('Inference time: {}'.format(elapsed))
+        result = output.splitlines()
 
-        return output
+        return jsonify(result)
     
     
 
