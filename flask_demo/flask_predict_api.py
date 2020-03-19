@@ -17,7 +17,7 @@ from flask import jsonify
 app = Flask(__name__)
 swagger = Swagger(app)
 
-@app.route('/text-generate')
+@app.route('/text-generate', methods=['GET', 'POST'])
 def inference_gpt2(
     model_name='',
     seed=None,
@@ -46,10 +46,16 @@ def inference_gpt2(
       
     """
     start = time()
-
-    input_text = request.args.get("input_text")
-    model_name = request.args.get("model_name")    
-
+    input_text = None
+    model_name = None
+    if request.method == 'GET':        
+        input_text = request.args.get("text")
+        model_name = request.args.get("model")    
+    else:
+        req_data = request.get_json()
+        input_text = req_data["text"]
+        model_name = req_data["model"]
+        
     models_dir = os.path.expanduser(os.path.expandvars(models_dir))
     if batch_size is None:
         batch_size = 1
